@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI Kıyafet Asistanı</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 30px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-top: 10px;
+        }
+
+        .city-selector {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .city-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .city-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px 30px;
+            font-size: 1.2em;
+            border: 3px solid #e0e0e0;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .city-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            padding: 20px 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .search-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .popular-cities {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .city-chip {
+            padding: 10px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .city-chip:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            flex-direction: column;
+        }
+
+        .loading-spinner {
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top: 6px solid white;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 1.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .loading-subtext {
+            color: rgba(255,255,255,0.8);
+            font-size: 1em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .error-box {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .error-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .error-box h2 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        .error-box p {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .weather-card {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .weather-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .weather-temp-section {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .weather-icon {
+            font-size: 120px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .temp-value {
+            font-size: 80px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .weather-description {
+            font-size: 28px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .detail-item {
+            background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .detail-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .detail-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detail-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+            margin-top: 40px;
+        }
+
+        .recommendation-card {
+            border-radius: 25px;
+            padding: 40px;
+            color: white;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recommendation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .recommendation-card:hover::before {
+            opacity: 1;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        }
+
+        .recommendation-card.morning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: slideUp 0.6s ease-out 0.1s backwards;
+        }
+
+        .recommendation-card.afternoon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            animation: slideUp 0.6s ease-out 0.2s backwards;
+        }
+
+        .recommendation-card.evening {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            animation: slideUp 0.6s ease-out 0.3s backwards;
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .recommendation-time-icon {
+            font-size: 55px;
+        }
+
+        .recommendation-title {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .recommendation-item {
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.15);
+            padding: 18px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .recommendation-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .recommendation-value {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .recommendation-note {
+            background: rgba(255,255,255,0.25);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 25px;
+            font-size: 16px;
+            line-height: 1.7;
+            border-left: 5px solid rgba(255,255,255,0.6);
+        }
+
+        .button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 20px 60px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 20px 10px;
+        }
+
+        .button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+            background: #f8f9fa;
+        }
+
+        .button:active {
+            transform: translateY(-2px);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Chatbot Stilleri */
+        .chatbot-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .chatbot-toggle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .chatbot-toggle.active {
+            background: #ff6b6b;
+        }
+
+        .chatbot-window {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUpChat 0.3s ease-out;
+        }
+
+        @keyframes slideUpChat {
+            from { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chatbot-header-icon {
+            font-size: 32px;
+        }
+
+        .chatbot-header-text h3 {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .chatbot-header-text p {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-bot {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .message-user {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message-bot .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message-user .message-avatar {
+            background: #e0e0e0;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+        }
+
+        .message-bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        .chatbot-typing {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator {
+            background: white;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typingDot 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingDot {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .chatbot-input-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-input:focus {
+            border-color: #667eea;
+        }
+
+        .chatbot-send-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-send-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .chatbot-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-reply-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-window {
+                width: calc(100vw - 20px);
+                height: calc(100vh - 140px);
+                right: 10px;
+                bottom: 110px;
+            }
+
+            .chatbot-toggle {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+                bottom: 20px;
+                right: 20px;
+            }
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .city-input-wrapper {
+                flex-direction: column;
+            }
+
+            .city-input {
+                min-width: 100%;
+            }
+
+            .search-btn {
+                width: 100%;
+            }
+
+            .weather-card {
+                padding: 30px;
+            }
+
+            .temp-value {
+                font-size: 55px;
+            }
+
+            .weather-icon {
+                font-size: 80px;
+            }
+
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+.chatbot-window.hidden {
+    display: none !important;
+}
+
+.chatbot-window {
+    transition: all 0.3s ease;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Kıyafet Asistanı</h1>
+            <p>Dünyanın her yerinden hava durumu ve akıllı kıyafet önerileri</p>
+        </div>
+
+        <div class="city-selector">
+            <div class="city-input-wrapper">
+                <input 
+                    type="text" 
+                    id="cityInput" 
+                    class="city-input" 
+                    placeholder="🌍 Şehir adı girin (örn: İstanbul, New York, Tokyo)..."
+                    value="Edirne"
+                />
+                <button class="search-btn" onclick="searchCity()">🔍 Ara</button>
+            </div>
+            <div class="popular-cities">
+                <div class="city-chip" onclick="selectCity('Istanbul')">🇹🇷 İstanbul</div>
+                <div class="city-chip" onclick="selectCity('Ankara')">🇹🇷 Ankara</div>
+                <div class="city-chip" onclick="selectCity('London')">🇬🇧 Londra</div>
+                <div class="city-chip" onclick="selectCity('New York')">🇺🇸 New York</div>
+                <div class="city-chip" onclick="selectCity('Tokyo')">🇯🇵 Tokyo</div>
+                <div class="city-chip" onclick="selectCity('Paris')">🇫🇷 Paris</div>
+                <div class="city-chip" onclick="selectCity('Dubai')">🇦🇪 Dubai</div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading-screen hidden">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Hava durumu kontrol ediliyor...</div>
+            <div class="loading-subtext">AI analiz yapıyor 🤖</div>
+        </div>
+
+        <div id="error" class="hidden">
+            <div class="error-box">
+                <div class="error-icon">⚠️</div>
+                <h2 id="error-title">Hata</h2>
+                <p id="error-message"></p>
+                <button class="button" onclick="location.reload()">🔄 Yenile</button>
+            </div>
+        </div>
+
+        <div id="content" class="hidden">
+            <div class="weather-card">
+                <div class="location-info">
+                    <span>📍</span>
+                    <span id="location-name">-</span>
+                </div>
+                <div class="weather-main">
+                    <div class="weather-temp-section">
+                        <div id="weather-icon" class="weather-icon">☀️</div>
+                        <div>
+                            <div id="temperature" class="temp-value">--°C</div>
+                            <div id="description" class="weather-description">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <div class="detail-icon">💧</div>
+                        <div class="detail-label">Nem Oranı</div>
+                        <div id="humidity" class="detail-value">--%</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-icon">💨</div>
+                        <div class="detail-label">Rüzgar Hızı</div>
+                        <div id="wind" class="detail-value">-- km/h</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-icon">🌧️</div>
+                        <div class="detail-label">Yağış</div>
+                        <div id="precipitation" class="detail-value">-- mm</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-icon">🌡️</div>
+                        <div class="detail-label">Hissedilen</div>
+                        <div id="feels-like" class="detail-value">--°C</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendations-grid" id="recommendations"></div>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <div class="chatbot-container">
+        <button class="chatbot-toggle" id="chatbotToggle" onclick="toggleChat()">
+    💬
+</button>
+        <div class="chatbot-window hidden" id="chatbotWindow">
+            <div class="chatbot-header">
+                <div class="chatbot-header-icon">🤖</div>
+                <div class="chatbot-header-text">
+                    <h3>AI Asistan</h3>
+                    <p>Kıyafet ve moda tavsiyeleri</p>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatMessages">
+                <div class="chat-message message-bot">
+                    <div class="message-avatar">🤖</div>
+                    <div>
+                        <div class="message-content">
+                            Merhaba! 👋 Ben AI kıyafet asistanınızım. Hava durumu, kıyafet kombinleri ve moda hakkında size yardımcı olabilirim.
+                        </div>
+                        <div class="quick-replies">
+                            <button class="quick-reply-btn" onclick="sendQuickReply('Bugün ne giysem?')">Bugün ne giysem?</button>
+                            <button class="quick-reply-btn" onclick="sendQuickReply('Renk kombinleri öner')">Renk kombinleri</button>
+                            <button class="quick-reply-btn" onclick="sendQuickReply('Aksesuar tavsiyeleri')">Aksesuarlar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-input-area">
+                <input 
+                    type="text" 
+                    class="chatbot-input" 
+                    id="chatInput" 
+                    placeholder="Mesajınızı yazın..."
+                />
+                <button class="chatbot-send-btn" id="chatSendBtn" onclick="sendMessage()">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCity = 'Edirne';
+        let chatHistory = [];
+
+        // Chatbot Functions
+        // Mevcut toggleChat fonksiyonunu bununla değiştir:
+function toggleChat() {
+    const chatWindow = document.getElementById('chatbotWindow');
+    const chatToggle = document.getElementById('chatbotToggle');
+    const chatInput = document.getElementById('chatInput');
+    
+    if (chatWindow.classList.contains('hidden')) {
+        // Chatbot'u AÇ
+        chatWindow.classList.remove('hidden');
+        chatToggle.classList.add('active');
+        chatToggle.innerHTML = '✕'; // Buton simgesini X yap
+        
+        // Açıldığında yazı yazma alanına odaklan
+        setTimeout(() => chatInput.focus(), 300);
+        scrollChatToBottom();
+    } else {
+        // Chatbot'u KAPAT
+        chatWindow.classList.add('hidden');
+        chatToggle.classList.remove('active');
+        chatToggle.innerHTML = '💬'; // Buton simgesini geri döndür
+    }
+}
+
+        function scrollChatToBottom() {
+            const messages = document.getElementById('chatMessages');
+            setTimeout(() => {
+                messages.scrollTop = messages.scrollHeight;
+            }, 100);
+        }
+
+        function addMessage(content, isUser = false) {
+            const messages = document.getElementById('chatMessages');
+            const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message message-${isUser ? 'user' : 'bot'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${isUser ? '👤' : '🤖'}</div>
+                <div>
+                    <div class="message-content">${content}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messages.appendChild(messageDiv);
+            scrollChatToBottom();
+        }
+
+        function showTyping() {
+            const messages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chatbot-typing';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            messages.appendChild(typingDiv);
+            scrollChatToBottom();
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Kullanıcı mesajını göster
+            addMessage(message, true);
+            input.value = '';
+            
+            // Chat geçmişine ekle
+            chatHistory.push({ role: 'user', content: message });
+            
+            // Typing göster
+            showTyping();
+            
+            // AI'dan cevap al
+            try {
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        history: chatHistory,
+                        weather: currentWeatherData
+                    })
+                });
+                
+                const data = await response.json();
+                hideTyping();
+                
+                if (data.response) {
+                    addMessage(data.response);
+                    chatHistory.push({ role: 'assistant', content: data.response });
+                } else {
+                    throw new Error('Yanıt alınamadı');
+                }
+            } catch (error) {
+                hideTyping();
+                addMessage('Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin. 😔');
+            }
+        }
+
+        function sendQuickReply(message) {
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        // Enter tuşu ile mesaj gönderme
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+
+        let currentWeatherData = null;
+
+        function getWeatherIcon(weatherCode) {
+            if (weatherCode === 0) return '☀️';
+            if (weatherCode <= 3) return '⛅';
+            if (weatherCode <= 48) return '🌫️';
+            if (weatherCode <= 67) return '🌧️';
+            if (weatherCode <= 77) return '🌨️';
+            if (weatherCode <= 82) return '🌧️';
+            if (weatherCode <= 86) return '🌨️';
+            if (weatherCode <= 99) return '⛈️';
+            return '🌤️';
+        }
+
+        function getWeatherDescription(weatherCode) {
+            const descriptions = {
+                0: 'Açık hava', 1: 'Çoğunlukla açık', 2: 'Parçalı bulutlu', 3: 'Bulutlu',
+                45: 'Sisli', 48: 'Kırağılı sis', 51: 'Hafif çiseleyen yağmur',
+                53: 'Orta şiddette çiseleyen yağmur', 55: 'Yoğun çiseleyen yağmur',
+                61: 'Hafif yağmur', 63: 'Orta şiddette yağmur', 65: 'Şiddetli yağmur',
+                71: 'Hafif kar yağışı', 73: 'Orta şiddette kar yağışı', 75: 'Şiddetli kar yağışı',
+                80: 'Hafif sağanak yağmur', 81: 'Orta şiddette sağanak yağmur',
+                82: 'Şiddetli sağanak yağmur', 95: 'Gök gürültülü fırtına',
+                96: 'Hafif dolu ile gök gürültülü fırtına', 99: 'Şiddetli dolu ile gök gürültülü fırtına'
+            };
+            return descriptions[weatherCode] || 'Bilinmeyen';
+        }
+
+        function selectCity(city) {
+            document.getElementById('cityInput').value = city;
+            searchCity();
+        }
+
+        function searchCity() {
+            const cityInput = document.getElementById('cityInput').value.trim();
+            if (!cityInput) {
+                alert('Lütfen bir şehir adı girin!');
+                return;
+            }
+            currentCity = cityInput;
+            init();
+        }
+
+        // Enter tuşu ile arama
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('cityInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchCity();
+                }
+            });
+            // İlk yükleme
+            init();
+        });
+
+        async function getCoordinates(city) {
+            try {
+                const response = await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=tr&format=json`
+                );
+                const data = await response.json();
+                
+                if (!data.results || data.results.length === 0) {
+                    throw new Error('Şehir bulunamadı! Lütfen farklı bir şehir deneyin.');
+                }
+                
+                const result = data.results[0];
+                return {
+                    lat: result.latitude,
+                    lon: result.longitude,
+                    name: result.name,
+                    country: result.country || '',
+                    displayName: `${result.name}${result.country ? ', ' + result.country : ''}`
+                };
+            } catch (error) {
+                throw new Error('Şehir bulunamadı! Lütfen farklı bir şehir deneyin.');
+            }
+        }
+
+        async function getWeather(coords) {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&timezone=auto`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Hava durumu alınamadı');
+                
+                const data = await response.json();
+                
+                return {
+                    temp: Math.round(data.current.temperature_2m),
+                    feelsLike: Math.round(data.current.apparent_temperature),
+                    humidity: data.current.relative_humidity_2m,
+                    wind: Math.round(data.current.wind_speed_10m),
+                    precipitation: data.current.precipitation || 0,
+                    weatherCode: data.current.weather_code,
+                    description: getWeatherDescription(data.current.weather_code),
+                    location: coords.displayName
+                };
+            } catch (error) {
+                throw new Error('Hava durumu verisi alınamadı');
+            }
+        }
+
+        async function getAIRecommendations(weather) {
+            try {
+                const params = new URLSearchParams({
+                    temp: weather.temp,
+                    humidity: weather.humidity,
+                    wind: weather.wind,
+                    precipitation: weather.precipitation,
+                    description: weather.description,
+                    location: weather.location
+                });
+
+                const response = await fetch(`http://localhost:8000/api/ai?${params}`);
+                if (!response.ok) throw new Error('AI önerileri alınamadı');
+                
+                return await response.json();
+            } catch (error) {
+                throw new Error('AI önerileri alınamadı. Proxy çalışıyor mu?');
+            }
+        }
+
+        function displayWeather(weather) {
+            document.getElementById('location-name').textContent = weather.location;
+            document.getElementById('temperature').textContent = `${weather.temp}°C`;
+            document.getElementById('description').textContent = weather.description;
+            document.getElementById('weather-icon').textContent = getWeatherIcon(weather.weatherCode);
+            document.getElementById('humidity').textContent = `${weather.humidity}%`;
+            document.getElementById('wind').textContent = `${weather.wind} km/h`;
+            document.getElementById('precipitation').textContent = `${weather.precipitation} mm`;
+            document.getElementById('feels-like').textContent = `${weather.feelsLike}°C`;
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendations');
+            const times = [
+                { key: 'morning', title: 'Sabah', icon: '🌅', class: 'morning' },
+                { key: 'afternoon', title: 'Öğlen', icon: '☀️', class: 'afternoon' },
+                { key: 'evening', title: 'Akşam', icon: '🌙', class: 'evening' }
+            ];
+
+            container.innerHTML = times.map(time => {
+                const rec = recommendations[time.key];
+                return `
+                    <div class="recommendation-card ${time.class}">
+                        <div class="recommendation-header">
+                            <div class="recommendation-time-icon">${time.icon}</div>
+                            <div class="recommendation-title">${time.title}</div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-label">👕 Üst Giyim</div>
+                            <div class="recommendation-value">${rec.upper}</div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-label">👖 Alt Giyim</div>
+                            <div class="recommendation-value">${rec.lower}</div>
+                        </div>
+                        <div class="recommendation-item">
+                            <div class="recommendation-label">🎒 Aksesuarlar</div>
+                            <div class="recommendation-value">${rec.accessories}</div>
+                        </div>
+                        <div class="recommendation-note">
+                            💡 ${rec.note}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showError(title, message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('content').classList.add('hidden');
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('error-title').textContent = title;
+            document.getElementById('error-message').innerHTML = message;
+        }
+
+        function showLoading() {
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('content').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function showContent() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+        }
+
+        async function init() {
+            try {
+                showLoading();
+                
+                // Koordinatları al
+                const coords = await getCoordinates(currentCity);
+                
+                // Hava durumunu al
+                const weather = await getWeather(coords);
+                currentWeatherData = weather; // Chatbot için sakla
+                displayWeather(weather);
+
+                // AI önerilerini al
+                const recommendations = await getAIRecommendations(weather);
+                displayRecommendations(recommendations);
+
+                showContent();
+
+            } catch (error) {
+                showError('Hata', error.message);
+            }
+        }
+        window.toggleChat = function() {
+    const windowDiv = document.getElementById('chatbotWindow');
+    const toggleBtn = document.getElementById('chatbotToggle');
+    
+    if (windowDiv.style.display === 'none' || windowDiv.classList.contains('hidden')) {
+        windowDiv.style.display = 'flex';
+        windowDiv.classList.remove('hidden');
+        toggleBtn.innerHTML = '✕';
+    } else {
+        windowDiv.style.display = 'none';
+        windowDiv.classList.add('hidden');
+        toggleBtn.innerHTML = '💬';
+    }
+}
+    </script>
+</body>
+</html>
